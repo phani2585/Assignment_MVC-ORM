@@ -92,13 +92,22 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model,HttpSession session) {
         Image image = imageService.getImage(imageId);
+        User user=(User)session.getAttribute("loggeduser");
+        String error = "Only the owner of the image can edit the image";
 
         String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
-        return "images/edit";
+        model.addAttribute("editError",error);
+
+        if(!user.getId().equals(image.getUser().getId())) {//If id of the logged user not equal to image owner id then return "images/image else allow to edit the page
+            return "images/image";
+        }
+        else{
+            return "images/edit";
+        }
     }
 
     //This controller method is called when the request pattern is of type 'images/edit' and also the incoming request is of PUT type
@@ -132,7 +141,7 @@ public class ImageController {
         updatedImage.setDate(new Date());
 
         imageService.updateImage(updatedImage);
-        return "redirect:/images/" + updatedImage.getTitle();
+        return "images/image";// Code changed to fix the 404 error shown after correcting BugFix2_editError
     }
 
 
